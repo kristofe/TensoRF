@@ -302,6 +302,44 @@ class TensorVMSplit(TensorBase):
         self.aabb = new_aabb
         self.update_stepSize((newSize[0], newSize[1], newSize[2]))
 
+class TensorVMSplitCube(TensorVMSplit):
+    def __init__(self, aabb, gridSize, device, **kargs):
+        super(TensorVMSplitCube, self).__init__(aabb, gridSize, device, **kargs)
+
+    @torch.no_grad()
+    def updateAlphaMask(self, gridSize=(200,200,200)):
+        #This will enforce a cube AABB
+        alpha, dense_xyz = self.getDenseAlpha(gridSize)
+        dense_xyz = dense_xyz.transpose(0,2).contiguous()
+        alpha = alpha.clamp(0,1).transpose(0,2).contiguous()[None,None]
+        total_voxels = gridSize[0] * gridSize[1] * gridSize[2]
+
+        ks = 3
+        alpha = F.max_pool3d(alpha, kernel_size=ks, padding=ks // 2, stride=1).view(gridSize[::-1])
+        alpha[alpha>=self.alphaMask_thres] = 1
+        alpha[alpha<self.alphaMask_thres] = 0
+
+        self.alphaMask = AlphaGridMask(self.device, self.aabb, alpha)
+
+        valid_xyz = dense_xyz[alpha>0.5]
+
+        xyz_min = valid_xyz.amin(0)
+        xyz_max = valid_xyz.amax(0)
+
+        # allow for AAABB to move but don't allow it to change shape
+        alpha, dense_xyz = self.getDenseAlpha(gridSize)
+        diffs = xyz_max - xyz_min
+        max_diff = diffs.amax()
+        half_diffs = (max_diff-diffs) * 0.5
+        xyz_min -= half_diffs
+        xyz_max += half_diffs
+
+
+        new_aabb = torch.stack((xyz_min, xyz_max))
+
+        total = torch.sum(alpha)
+        print(f"bbox: {xyz_min, xyz_max} alpha rest %%%f"%(total/total_voxels*100))
+        return new_aabb
 
 class TensorCP(TensorBase):
     def __init__(self, aabb, gridSize, device, **kargs):

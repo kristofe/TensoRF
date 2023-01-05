@@ -20,7 +20,7 @@ def config_parser(cmd=None):
     parser.add_argument('--downsample_test', type=float, default=1.0)
 
     parser.add_argument('--model_name', type=str, default='TensorVMSplit',
-                        choices=['TensorVMSplit', 'TensorCP'])
+                        choices=['TensorVMSplit', 'TensorCP','TensorVMSplitCube'])
 
     # loader options
     parser.add_argument("--batch_size", type=int, default=4096)
@@ -128,6 +128,8 @@ def config_parser(cmd=None):
                         help='N images to vis')
     parser.add_argument("--vis_every", type=int, default=10000,
                         help='frequency of visualize the image')
+    
+
     if cmd is not None:
         return parser.parse_args(cmd)
     else:

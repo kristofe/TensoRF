@@ -241,7 +241,7 @@ def reconstruction(args):
 
 
         if iteration in update_AlphaMask_list:
-
+            # An alternative strategy for concentrating rays on the actual model is to only allow 1/3 to hit the background
             if reso_cur[0] * reso_cur[1] * reso_cur[2]<256**3:# update volume resolution
                 reso_mask = reso_cur
             new_aabb = tensorf.updateAlphaMask(tuple(reso_mask))
@@ -306,7 +306,7 @@ if __name__ == '__main__':
     np.random.seed(20211202)
 
     # Hack to debug in VSCode without changing settings
-    os.sys.argv.extend(["--config","configs/legoLQ.txt"])
+    os.sys.argv.extend(["--config","configs/ficusLQ.txt"])
 
     args = config_parser()
     print(args)
