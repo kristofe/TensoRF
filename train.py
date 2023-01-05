@@ -305,6 +305,9 @@ if __name__ == '__main__':
     torch.manual_seed(20211202)
     np.random.seed(20211202)
 
+    # Hack to debug in VSCode without changing settings
+    os.sys.argv.extend(["--config","configs/lego.txt"])
+
     args = config_parser()
     print(args)
 
