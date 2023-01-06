@@ -100,7 +100,8 @@ def render_ml_data(args, outpath):
 
     os.makedirs(outpath, exist_ok=True)
 
-    render_ml(test_dataset, tensorf, renderer, outpath, N_vis=-1, N_samples=-1, white_bg = True, ndc_ray=ndc_ray)
+    ml_placeholder_dataset = BlenderDataset("./data/ml_placeholder_dataset", split='ml')
+    render_ml(ml_placeholder_dataset, tensorf, renderer, outpath, N_vis=-1, N_samples=-1, white_bg = True, ndc_ray=ndc_ray)
 
 
 def reconstruction(args):

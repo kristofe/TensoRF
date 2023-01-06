@@ -68,16 +68,17 @@ class BlenderDataset(Dataset):
             c2w = torch.FloatTensor(pose)
             self.poses += [c2w]
 
-            image_path = os.path.join(self.root_dir, f"{frame['file_path']}.png")
-            self.image_paths += [image_path]
-            img = Image.open(image_path)
-            
-            if self.downsample!=1.0:
-                img = img.resize(self.img_wh, Image.LANCZOS)
-            img = self.transform(img)  # (4, h, w)
-            img = img.view(4, -1).permute(1, 0)  # (h*w, 4) RGBA
-            img = img[:, :3] * img[:, -1:] + (1 - img[:, -1:])  # blend A to RGB
-            self.all_rgbs += [img]
+            if self.split != "ml":
+                image_path = os.path.join(self.root_dir, f"{frame['file_path']}.png")
+                self.image_paths += [image_path]
+                img = Image.open(image_path)
+                
+                if self.downsample!=1.0:
+                    img = img.resize(self.img_wh, Image.LANCZOS)
+                img = self.transform(img)  # (4, h, w)
+                img = img.view(4, -1).permute(1, 0)  # (h*w, 4) RGBA
+                img = img[:, :3] * img[:, -1:] + (1 - img[:, -1:])  # blend A to RGB
+                self.all_rgbs += [img]
 
 
             rays_o, rays_d = get_rays(self.directions, c2w)  # both (h*w, 3)
@@ -87,12 +88,14 @@ class BlenderDataset(Dataset):
         self.poses = torch.stack(self.poses)
         if not self.is_stack:
             self.all_rays = torch.cat(self.all_rays, 0)  # (len(self.meta['frames])*h*w, 3)
-            self.all_rgbs = torch.cat(self.all_rgbs, 0)  # (len(self.meta['frames])*h*w, 3)
+            if self.split != "ml":
+                self.all_rgbs = torch.cat(self.all_rgbs, 0)  # (len(self.meta['frames])*h*w, 3)
 
 #             self.all_depth = torch.cat(self.all_depth, 0)  # (len(self.meta['frames])*h*w, 3)
         else:
             self.all_rays = torch.stack(self.all_rays, 0)  # (len(self.meta['frames]),h*w, 3)
-            self.all_rgbs = torch.stack(self.all_rgbs, 0).reshape(-1,*self.img_wh[::-1], 3)  # (len(self.meta['frames]),h,w,3)
+            if self.split != "ml":
+                self.all_rgbs = torch.stack(self.all_rgbs, 0).reshape(-1,*self.img_wh[::-1], 3)  # (len(self.meta['frames]),h,w,3)
             # self.all_masks = torch.stack(self.all_masks, 0).reshape(-1,*self.img_wh[::-1])  # (len(self.meta['frames]),h,w,3)
 
 
@@ -107,13 +110,18 @@ class BlenderDataset(Dataset):
         return (points - self.center.to(device)) / self.radius.to(device)
         
     def __len__(self):
-        return len(self.all_rgbs)
+        if self.split != "ml":
+            return len(self.all_rgbs)
+        return len(self.all_rays)
 
     def __getitem__(self, idx):
 
         if self.split == 'train':  # use data in the buffers
             sample = {'rays': self.all_rays[idx],
                       'rgbs': self.all_rgbs[idx]}
+
+        elif self.split == 'ml':  
+            sample = {'rays': self.all_rays[idx]}
 
         else:  # create data for each image separately
 
