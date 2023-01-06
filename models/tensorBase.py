@@ -262,6 +262,37 @@ class TensorBase(torch.nn.Module):
             self.alphaMask = AlphaGridMask(self.device, ckpt['alphaMask.aabb'].to(self.device), alpha_volume.float().to(self.device))
         self.load_state_dict(ckpt['state_dict'])
 
+    def save_for_ml(self, path):
+        sd = self.state_dict()
+
+        #just testing
+        #sd['density_line.0'] = sd['density_line.0'] * 0.0
+        #sd['density_line.1'] = sd['density_line.1'] * 0.0 + 1
+        #sd['density_line.2'] = sd['density_line.2'] * 0.0 + 2
+        density_planes = torch.stack((sd["density_plane.0"], sd["density_plane.1"], sd["density_plane.2"]))
+        density_lines = torch.stack((sd["density_line.0"], sd["density_line.1"], sd["density_line.2"]))
+        app_planes = torch.stack((sd["app_plane.0"], sd["app_plane.1"], sd["app_plane.2"]))
+        app_lines = torch.stack((sd["app_line.0"], sd["app_line.1"], sd["app_line.2"]))
+
+        np.savez_compressed(path, density_planes=density_planes.cpu().numpy(), density_lines=density_lines.cpu().numpy(), app_planes=app_planes.cpu().numpy(), app_lines=app_lines.cpu().numpy())
+
+    def load_from_ml(self, path):
+        data = np.load(path)
+        density_planes =  data['density_planes']
+        density_lines =  data['density_lines']
+        app_planes = data['app_planes']
+        app_lines = data['app_lines']
+
+        sd = self.state_dict()
+        device = sd['density_plane.0'].device
+        for i in range(3):
+            sd[f'density_plane.{i}'] = torch.from_numpy(density_planes[i]).to(device)
+            sd[f'density_line.{i}'] = torch.from_numpy(density_lines[i]).to(device)
+            sd[f'app_plane.{i}'] = torch.from_numpy(app_planes[i]).to(device)
+            sd[f'app_line.{i}'] = torch.from_numpy(app_lines[i]).to(device)
+        
+        self.load_state_dict(sd)
+
 
     def sample_ray_ndc(self, rays_o, rays_d, is_train=True, N_samples=-1):
         N_samples = N_samples if N_samples > 0 else self.nSamples

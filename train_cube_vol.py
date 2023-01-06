@@ -86,6 +86,23 @@ def render_test(args):
         evaluation_path(test_dataset,tensorf, c2ws, renderer, f'{logfolder}/{args.expname}/imgs_path_all/',
                                 N_vis=-1, N_samples=-1, white_bg = white_bg, ndc_ray=ndc_ray,device=device)
 
+@torch.no_grad()
+def render_ml_data(args, outpath):
+    white_bg = 1 #test_dataset.white_bg
+    ndc_ray = args.ndc_ray
+
+    if not os.path.exists(args.ml_prediction_path):
+        print('the ml prediction path does not exists!!')
+        return
+
+    tensorf = TensorVMSplit()
+    tensorf.load_from_ml(args.ml_prediction_path)
+
+    os.makedirs(outpath, exist_ok=True)
+
+    render_ml(test_dataset, tensorf, renderer, outpath, N_vis=-1, N_samples=-1, white_bg = True, ndc_ray=ndc_ray)
+
+
 def reconstruction(args):
 
     # init dataset
@@ -170,6 +187,7 @@ def reconstruction(args):
     TV_weight_density, TV_weight_app = args.TV_weight_density, args.TV_weight_app
     tvreg = TVLoss()
     print(f"initial TV_weight density: {TV_weight_density} appearance: {TV_weight_app}")
+
 
 
     pbar = tqdm(range(args.n_iters), miniters=args.progress_refresh_rate, file=sys.stdout)
@@ -275,6 +293,8 @@ def reconstruction(args):
 
     tensorf.save(f'{logfolder}/{args.expname}.th')
 
+    ml_data_path = args.ml_prediction_path
+    tensorf.save_for_ml(ml_data_path)
 
     if args.render_train:
         os.makedirs(f'{logfolder}/imgs_train_all', exist_ok=True)
@@ -306,13 +326,16 @@ if __name__ == '__main__':
     np.random.seed(20211202)
 
     # Hack to debug in VSCode without changing settings
-    os.sys.argv.extend(["--config","configs/ficusLQ.txt"])
+    os.sys.argv.extend(["--config","configs/legoLQ.txt"])
 
     args = config_parser()
     print(args)
 
     if  args.export_mesh:
         export_mesh(args)
+
+    if args.render_ml_prediction:
+        render_ml(args)
 
     if args.render_only and (args.render_test or args.render_path):
         render_test(args)

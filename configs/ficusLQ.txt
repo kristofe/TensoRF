@@ -5,10 +5,12 @@ expname =  tensorf_ficuslq_VM
 basedir = ./log
 
 n_iters = 5000
-batch_size = 4096
+batch_size = 8192 #4096
 
-N_voxel_init = 32768 # 32**3
-N_voxel_final = 884736 # 96**3
+N_voxel_init = 4096 # 16**3
+N_voxel_final = 32768 # 32**3
+#N_voxel_init = 32768 # 32**3
+#N_voxel_final = 884736 # 96**3
 upsamp_list = [1000,2000,3000]
 update_AlphaMask_list = [-1]  # disable recalculation of AABB and grid size #[1000,3000] #see if this stops the grid from becoming non-cube
 

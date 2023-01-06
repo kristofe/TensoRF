@@ -130,6 +130,12 @@ def config_parser(cmd=None):
                         help='frequency of visualize the image')
     
 
+    parser.add_argument('--render_ml_prediction',
+                        type=int,
+                        default=0)
+    parser.add_argument("--ml_prediction_path", type=str, default='./test_ml_data.npz',
+                        help='path to load ml prediction')
+
     if cmd is not None:
         return parser.parse_args(cmd)
     else:
