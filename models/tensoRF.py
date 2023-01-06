@@ -470,3 +470,70 @@ class TensorCP(TensorBase):
         for idx in range(len(self.app_line)):
             total = total + reg(self.app_line[idx]) * 1e-3
         return total
+
+
+
+
+class TensorVMSplitNoMat(TensorVMSplit):
+    def __init__(self, aabb, gridSize, device, **kargs):
+        super(TensorVMSplitNoMat, self).__init__(aabb, gridSize, device, **kargs)
+
+
+    def init_svd_volume(self, res, device):
+        self.density_plane, self.density_line = self.init_one_svd(self.density_n_comp, self.gridSize, 0.1, device)
+        self.app_plane, self.app_line = self.init_one_svd(self.app_n_comp, self.gridSize, 0.1, device)
+
+    def get_optparam_groups(self, lr_init_spatialxyz = 0.02, lr_init_network = 0.001):
+        grad_vars = [{'params': self.density_line, 'lr': lr_init_spatialxyz}, {'params': self.density_plane, 'lr': lr_init_spatialxyz},
+                     {'params': self.app_line, 'lr': lr_init_spatialxyz}, {'params': self.app_plane, 'lr': lr_init_spatialxyz}]
+        if isinstance(self.renderModule, torch.nn.Module):
+            grad_vars += [{'params':self.renderModule.parameters(), 'lr':lr_init_network}]
+        return grad_vars
+
+
+    def compute_appfeature(self, xyz_sampled):
+
+        # plane + line basis
+        coordinate_plane = torch.stack((xyz_sampled[..., self.matMode[0]], xyz_sampled[..., self.matMode[1]], xyz_sampled[..., self.matMode[2]])).detach().view(3, -1, 1, 2)
+        coordinate_line = torch.stack((xyz_sampled[..., self.vecMode[0]], xyz_sampled[..., self.vecMode[1]], xyz_sampled[..., self.vecMode[2]]))
+        coordinate_line = torch.stack((torch.zeros_like(coordinate_line), coordinate_line), dim=-1).detach().view(3, -1, 1, 2)
+
+        plane_coef_point,line_coef_point = [],[]
+        for idx_plane in range(len(self.app_plane)):
+            plane_coef_point.append(F.grid_sample(self.app_plane[idx_plane], coordinate_plane[[idx_plane]],
+                                                align_corners=True).view(-1, *xyz_sampled.shape[:1]))
+            line_coef_point.append(F.grid_sample(self.app_line[idx_plane], coordinate_line[[idx_plane]],
+                                            align_corners=True).view(-1, *xyz_sampled.shape[:1]))
+        plane_coef_point, line_coef_point = torch.cat(plane_coef_point), torch.cat(line_coef_point)
+
+
+        return (plane_coef_point * line_coef_point).T
+
+    def save_for_ml(self, path):
+        sd = self.state_dict()
+
+        density_planes = torch.stack((sd["density_plane.0"], sd["density_plane.1"], sd["density_plane.2"]))
+        density_lines = torch.stack((sd["density_line.0"], sd["density_line.1"], sd["density_line.2"]))
+        app_planes = torch.stack((sd["app_plane.0"], sd["app_plane.1"], sd["app_plane.2"]))
+        app_lines = torch.stack((sd["app_line.0"], sd["app_line.1"], sd["app_line.2"]))
+
+        np.savez_compressed(path, density_planes=density_planes.cpu().numpy(), density_lines=density_lines.cpu().numpy(), 
+                            app_planes=app_planes.cpu().numpy(), app_lines=app_lines.cpu().numpy())
+
+    def load_from_ml(self, path):
+        data = np.load(path)
+        density_planes =  data['density_planes']
+        density_lines =  data['density_lines']
+        app_planes = data['app_planes']
+        app_lines = data['app_lines']
+
+        sd = self.state_dict()
+        device = sd['density_plane.0'].device
+        for i in range(3):
+            sd[f'density_plane.{i}'] = torch.from_numpy(density_planes[i]).to(device)
+            sd[f'density_line.{i}'] = torch.from_numpy(density_lines[i]).to(device)
+            sd[f'app_plane.{i}'] = torch.from_numpy(app_planes[i]).to(device)
+            sd[f'app_line.{i}'] = torch.from_numpy(app_lines[i]).to(device)
+        
+        
+        self.load_state_dict(sd)

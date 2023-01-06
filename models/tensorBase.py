@@ -273,8 +273,11 @@ class TensorBase(torch.nn.Module):
         density_lines = torch.stack((sd["density_line.0"], sd["density_line.1"], sd["density_line.2"]))
         app_planes = torch.stack((sd["app_plane.0"], sd["app_plane.1"], sd["app_plane.2"]))
         app_lines = torch.stack((sd["app_line.0"], sd["app_line.1"], sd["app_line.2"]))
+        basis_mat_weight = sd['basis_mat.weight']
 
-        np.savez_compressed(path, density_planes=density_planes.cpu().numpy(), density_lines=density_lines.cpu().numpy(), app_planes=app_planes.cpu().numpy(), app_lines=app_lines.cpu().numpy())
+        np.savez_compressed(path, density_planes=density_planes.cpu().numpy(), density_lines=density_lines.cpu().numpy(), 
+                            app_planes=app_planes.cpu().numpy(), app_lines=app_lines.cpu().numpy(),
+                            basis_mat_weight=basis_mat_weight.cpu().numpy())
 
     def load_from_ml(self, path):
         data = np.load(path)
@@ -282,6 +285,7 @@ class TensorBase(torch.nn.Module):
         density_lines =  data['density_lines']
         app_planes = data['app_planes']
         app_lines = data['app_lines']
+        basis_mat_weight = data['basis_mat_weight']
 
         sd = self.state_dict()
         device = sd['density_plane.0'].device
@@ -290,6 +294,8 @@ class TensorBase(torch.nn.Module):
             sd[f'density_line.{i}'] = torch.from_numpy(density_lines[i]).to(device)
             sd[f'app_plane.{i}'] = torch.from_numpy(app_planes[i]).to(device)
             sd[f'app_line.{i}'] = torch.from_numpy(app_lines[i]).to(device)
+        
+        sd[f'basis_mat.weight'] = torch.from_numpy(basis_mat_weight).to(device)
         
         self.load_state_dict(sd)
 

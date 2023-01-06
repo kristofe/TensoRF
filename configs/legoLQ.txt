@@ -9,10 +9,10 @@ batch_size = 4096
 
 #N_voxel_init = 4096 # 16**3
 N_voxel_init = 32768 # 32**3
-N_voxel_final = 262144 # 64**3
+#N_voxel_final = 262144 # 64**3
 #N_voxel_final = 512000 # 80**3
 #N_voxel_init = 32768 # 32**3
-#N_voxel_final = 884736 # 96**3
+N_voxel_final = 884736 # 96**3
 upsamp_list = [1000,2000,3000]
 update_AlphaMask_list = [-1]  # disable recalculation of AABB[1000,3000] #see if this stops the grid from becoming non-cube
 
@@ -23,11 +23,12 @@ render_test = 0
 
 n_lamb_sigma = [16,16,16]
 n_lamb_sh = [48,48,48]
-model_name = TensorVMSplit # TensorVMSplitCube 
+model_name = TensorVMSplit #TensorVMSplitNoMat # TensorVMSplit # TensorVMSplitCube 
 
 
-shadingMode = RGB
-data_dim_color = 3
+shadingMode = SH
+#shadingMode = RGB
+#data_dim_color = 3
 fea2denseAct = softplus
 
 view_pe = 2

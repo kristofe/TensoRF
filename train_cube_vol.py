@@ -105,7 +105,18 @@ def render_ml_data(args):
                     shadingMode=args.shadingMode, alphaMask_thres=args.alpha_mask_thre, density_shift=args.density_shift, distance_scale=args.distance_scale,
                     pos_pe=args.pos_pe, view_pe=args.view_pe, fea_pe=args.fea_pe, featureC=args.featureC, step_ratio=args.step_ratio, fea2denseAct=args.fea2denseAct)
     
+    gen_sd = tensorf.state_dict()
     tensorf.load_from_ml(args.ml_prediction_path)
+    #print(gen_sd)
+
+    #ckpt = torch.load("./log/tensorf_legolq_VM/tensorf_legolq_VM.th", map_location=device)
+    #kwargs = ckpt['kwargs']
+    #kwargs.update({'device': device})
+    #tensorf = eval(args.model_name)(**kwargs)
+    #tensorf.load(ckpt)
+
+    #correct_sd = tensorf.state_dict()
+    #print(correct_sd)
 
     os.makedirs(args.ml_render_outpath, exist_ok=True)
 
@@ -336,8 +347,8 @@ if __name__ == '__main__':
     np.random.seed(20211202)
 
     # Hack to debug in VSCode without changing settings
-    #os.sys.argv.extend(["--config","configs/legoLQ.txt"])
-    os.sys.argv.extend(["--config","configs/ml_render.txt", "--render_ml_prediction", "1"])
+    os.sys.argv.extend(["--config","configs/legoLQ.txt"])
+    #os.sys.argv.extend(["--config","configs/ml_render.txt", "--render_ml_prediction", "1"])
 
     args = config_parser()
     print(args)
