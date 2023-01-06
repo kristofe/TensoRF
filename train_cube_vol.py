@@ -87,21 +87,31 @@ def render_test(args):
                                 N_vis=-1, N_samples=-1, white_bg = white_bg, ndc_ray=ndc_ray,device=device)
 
 @torch.no_grad()
-def render_ml_data(args, outpath):
-    white_bg = 1 #test_dataset.white_bg
+def render_ml_data(args):
     ndc_ray = args.ndc_ray
 
     if not os.path.exists(args.ml_prediction_path):
         print('the ml prediction path does not exists!!')
         return
 
-    tensorf = TensorVMSplit()
+    device = torch.device("cuda")
+    #from dataLoader.blender import BlenderDataset
+    #ml_placeholder_dataset = BlenderDataset("./data/ml_placeholder_dataset", split='ml')
+    dataset = dataset_dict[args.dataset_name]
+    ml_placeholder_dataset = dataset(args.datadir, split='ml', downsample=args.downsample_train, is_stack=False)
+    aabb = ml_placeholder_dataset.scene_bbox.to(device)
+    near_far = ml_placeholder_dataset.near_far
+    gridSize = N_to_reso(args.N_voxel_final, aabb)
+    tensorf = TensorVMSplit(aabb, gridSize, device,
+                    density_n_comp=args.n_lamb_sigma, appearance_n_comp=args.n_lamb_sh, app_dim=args.data_dim_color, near_far=near_far,
+                    shadingMode=args.shadingMode, alphaMask_thres=args.alpha_mask_thre, density_shift=args.density_shift, distance_scale=args.distance_scale,
+                    pos_pe=args.pos_pe, view_pe=args.view_pe, fea_pe=args.fea_pe, featureC=args.featureC, step_ratio=args.step_ratio, fea2denseAct=args.fea2denseAct)
+    
     tensorf.load_from_ml(args.ml_prediction_path)
 
-    os.makedirs(outpath, exist_ok=True)
+    os.makedirs(args.ml_render_outpath, exist_ok=True)
 
-    ml_placeholder_dataset = BlenderDataset("./data/ml_placeholder_dataset", split='ml')
-    render_ml(ml_placeholder_dataset, tensorf, renderer, outpath, N_vis=-1, N_samples=-1, white_bg = True, ndc_ray=ndc_ray)
+    render_ml(ml_placeholder_dataset, tensorf, renderer, args.ml_render_outpath, N_vis=-1, N_samples=-1, white_bg = True, ndc_ray=ndc_ray)
 
 
 def reconstruction(args):
@@ -327,7 +337,8 @@ if __name__ == '__main__':
     np.random.seed(20211202)
 
     # Hack to debug in VSCode without changing settings
-    os.sys.argv.extend(["--config","configs/legoLQ.txt"])
+    #os.sys.argv.extend(["--config","configs/legoLQ.txt"])
+    os.sys.argv.extend(["--config","configs/ml_render.txt", "--render_ml_prediction", "1"])
 
     args = config_parser()
     print(args)
@@ -336,7 +347,7 @@ if __name__ == '__main__':
         export_mesh(args)
 
     if args.render_ml_prediction:
-        render_ml(args)
+        render_ml_data(args)
 
     if args.render_only and (args.render_test or args.render_path):
         render_test(args)
