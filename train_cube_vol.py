@@ -96,7 +96,7 @@ def render_ml_data(args):
 
     device = torch.device("cuda")
     dataset = dataset_dict[args.dataset_name]
-    ml_placeholder_dataset = dataset(args.datadir, split='train', downsample=args.downsample_train, is_stack=True)
+    ml_placeholder_dataset = dataset(args.datadir, split='ml', downsample=args.downsample_train, is_stack=True)
     aabb = ml_placeholder_dataset.scene_bbox.to(device)
     near_far = ml_placeholder_dataset.near_far
     gridSize = N_to_reso(args.N_voxel_final, aabb)
