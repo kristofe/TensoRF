@@ -100,7 +100,8 @@ def render_ml_data(args):
     aabb = ml_placeholder_dataset.scene_bbox.to(device)
     near_far = ml_placeholder_dataset.near_far
     gridSize = N_to_reso(args.N_voxel_final, aabb)
-    tensorf = TensorVMSplit(aabb, gridSize, device,
+    #tensorf = TensorVMSplit(aabb, gridSize, device,
+    tensorf = TensorCP(aabb, gridSize, device,
                     density_n_comp=args.n_lamb_sigma, appearance_n_comp=args.n_lamb_sh, app_dim=args.data_dim_color, near_far=near_far,
                     shadingMode=args.shadingMode, alphaMask_thres=args.alpha_mask_thre, density_shift=args.density_shift, distance_scale=args.distance_scale,
                     pos_pe=args.pos_pe, view_pe=args.view_pe, fea_pe=args.fea_pe, featureC=args.featureC, step_ratio=args.step_ratio, fea2denseAct=args.fea2denseAct)
@@ -123,6 +124,8 @@ def render_ml_data(args):
     nSamples = min(args.nSamples, cal_n_samples(gridSize,args.step_ratio))
     render_ml(ml_placeholder_dataset, tensorf, renderer, args.ml_render_outpath, N_vis=args.N_vis, N_samples=nSamples, white_bg = True, ndc_ray=ndc_ray)
 
+    alpha,_ = tensorf.getDenseAlpha()
+    convert_sdf_samples_to_ply(alpha.cpu(), f'{args.ml_render_outpath}/ml_mesh.ply',bbox=tensorf.aabb.cpu(), level=0.005)
 
 def reconstruction(args):
 
@@ -347,7 +350,7 @@ if __name__ == '__main__':
     np.random.seed(20211202)
 
     # Hack to debug in VSCode without changing settings
-    os.sys.argv.extend(["--config","configs/legoLQ.txt"])
+    os.sys.argv.extend(["--config","configs/legoCP.txt"])
     #os.sys.argv.extend(["--config","configs/ml_render.txt", "--render_ml_prediction", "1"])
 
     args = config_parser()

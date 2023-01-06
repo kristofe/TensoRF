@@ -21,14 +21,14 @@ vis_every = 2500
 
 render_test = 0
 
-n_lamb_sigma = [16,16,16]
-n_lamb_sh = [48,48,48]
+n_lamb_sigma = [16,16,16] # This is the number of features per dimension per density plane/line
+n_lamb_sh = [48,48,48] #[1,1,1] #[48,48,48] # This is the number of features per dimension per appearance plane/line
 model_name = TensorVMSplit #TensorVMSplitNoMat # TensorVMSplit # TensorVMSplitCube 
 
 
-shadingMode = SH
-#shadingMode = RGB
-#data_dim_color = 3
+#shadingMode = SH
+shadingMode = RGB
+data_dim_color = 3
 fea2denseAct = softplus
 
 view_pe = 2
