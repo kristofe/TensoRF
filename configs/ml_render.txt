@@ -13,7 +13,7 @@ upsamp_list = [1000,2000,3000]
 update_AlphaMask_list = [-1]  # disable recalculation of AABB[1000,3000] #see if this stops the grid from becoming non-cube
 
 N_vis = 5
-vis_every = 2500
+vis_every = 500
 
 render_test = 0
 

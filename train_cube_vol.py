@@ -95,10 +95,8 @@ def render_ml_data(args):
         return
 
     device = torch.device("cuda")
-    #from dataLoader.blender import BlenderDataset
-    #ml_placeholder_dataset = BlenderDataset("./data/ml_placeholder_dataset", split='ml')
     dataset = dataset_dict[args.dataset_name]
-    ml_placeholder_dataset = dataset(args.datadir, split='ml', downsample=args.downsample_train, is_stack=False)
+    ml_placeholder_dataset = dataset(args.datadir, split='train', downsample=args.downsample_train, is_stack=True)
     aabb = ml_placeholder_dataset.scene_bbox.to(device)
     near_far = ml_placeholder_dataset.near_far
     gridSize = N_to_reso(args.N_voxel_final, aabb)
@@ -111,7 +109,8 @@ def render_ml_data(args):
 
     os.makedirs(args.ml_render_outpath, exist_ok=True)
 
-    render_ml(ml_placeholder_dataset, tensorf, renderer, args.ml_render_outpath, N_vis=-1, N_samples=-1, white_bg = True, ndc_ray=ndc_ray)
+    nSamples = min(args.nSamples, cal_n_samples(gridSize,args.step_ratio))
+    render_ml(ml_placeholder_dataset, tensorf, renderer, args.ml_render_outpath, N_vis=args.N_vis, N_samples=nSamples, white_bg = True, ndc_ray=ndc_ray)
 
 
 def reconstruction(args):
@@ -339,6 +338,7 @@ if __name__ == '__main__':
     # Hack to debug in VSCode without changing settings
     #os.sys.argv.extend(["--config","configs/legoLQ.txt"])
     os.sys.argv.extend(["--config","configs/ml_render.txt", "--render_ml_prediction", "1"])
+    #os.sys.argv.extend(["--config","configs/ml_render.txt"])
 
     args = config_parser()
     print(args)
