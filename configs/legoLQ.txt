@@ -26,7 +26,8 @@ n_lamb_sh = [48,48,48]
 model_name = TensorVMSplit # TensorVMSplitCube 
 
 
-shadingMode = MLP_Fea
+shadingMode = RGB
+data_dim_color = 3
 fea2denseAct = softplus
 
 view_pe = 2

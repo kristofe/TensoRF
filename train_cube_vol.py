@@ -338,7 +338,6 @@ if __name__ == '__main__':
     # Hack to debug in VSCode without changing settings
     #os.sys.argv.extend(["--config","configs/legoLQ.txt"])
     os.sys.argv.extend(["--config","configs/ml_render.txt", "--render_ml_prediction", "1"])
-    #os.sys.argv.extend(["--config","configs/ml_render.txt"])
 
     args = config_parser()
     print(args)
@@ -348,6 +347,7 @@ if __name__ == '__main__':
 
     if args.render_ml_prediction:
         render_ml_data(args)
+        sys.exit()
 
     if args.render_only and (args.render_test or args.render_path):
         render_test(args)
