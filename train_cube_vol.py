@@ -121,10 +121,10 @@ def render_ml_data(args):
 
     os.makedirs(args.ml_render_outpath, exist_ok=True)
 
-    density, rgb, grid_xyz = tensorf.getGridColorAndDensity()
+    density, rgb, _ = tensorf.getGridColorAndDensity()
     #path = f"{args.ml_render_output_path}/test_ml_density_and_color.npz"
     path = "./test_ml_density_and_color.npz"
-    np.savez_compressed(path,density=density.cpu().numpy(), color=rgb.cpu().numpy(), positions=grid_xyz.cpu().numpy())
+    np.savez_compressed(path,density=density.cpu().numpy(), color=rgb.cpu().numpy())
 
     nSamples = min(args.nSamples, cal_n_samples(gridSize,args.step_ratio))
     render_ml(ml_placeholder_dataset, tensorf, renderer, args.ml_render_outpath, N_vis=args.N_vis, N_samples=nSamples, white_bg = True, ndc_ray=ndc_ray)

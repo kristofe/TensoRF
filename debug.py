@@ -13,6 +13,20 @@ def to_image(x, normalize=True):
 
 if __name__ == '__main__':
     data = np.load('./test_ml_density_and_color.npz')
+    color_data =  data['color']
+    density_data =  data['density']
+    halfz = color_data.shape[2]//2
+    color = color_data[:,:,halfz,:]
+    density = density_data[:,:,halfz]
+
+    color_image = to_image(color, False)
+    color_image.show()
+    density_image = to_image(density, False)
+    density_image.show()
+
+
+
+
     #data = np.load('./test_ml_data.npz')
 
     density_lines =  data['density_lines']
