@@ -12,17 +12,14 @@ def to_image(x, normalize=True):
     return Image.fromarray(x)
 
 if __name__ == '__main__':
-    data = np.load('./test_ml_data.npz')
+    data = np.load('./test_ml_density_and_color.npz')
+    #data = np.load('./test_ml_data.npz')
 
-    #density_planes =  data['density_planes']
     density_lines =  data['density_lines']
-    #app_planes = data['app_planes']
     app_lines = data['app_lines']
-
     dl = density_lines.squeeze(-1).squeeze(1).transpose(1,2,0)
     density_image = to_image(dl, True)
     density_image.show()
-
     al = app_lines.squeeze(-1).squeeze(1).transpose(1,2,0)
     app_image = to_image(al, True)
     app_image.show()
