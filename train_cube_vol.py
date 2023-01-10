@@ -121,6 +121,8 @@ def render_ml_data(args):
 
     os.makedirs(args.ml_render_outpath, exist_ok=True)
 
+    density, rgb, grid_xyz = tensorf.getGridColorAndDensity()
+
     nSamples = min(args.nSamples, cal_n_samples(gridSize,args.step_ratio))
     render_ml(ml_placeholder_dataset, tensorf, renderer, args.ml_render_outpath, N_vis=args.N_vis, N_samples=nSamples, white_bg = True, ndc_ray=ndc_ray)
 
@@ -350,8 +352,8 @@ if __name__ == '__main__':
     np.random.seed(20211202)
 
     # Hack to debug in VSCode without changing settings
-    os.sys.argv.extend(["--config","configs/legoCP.txt"])
-    #os.sys.argv.extend(["--config","configs/ml_render.txt", "--render_ml_prediction", "1"])
+    #os.sys.argv.extend(["--config","configs/legoCP.txt"])
+    os.sys.argv.extend(["--config","configs/ml_render.txt", "--render_ml_prediction", "1"])
 
     args = config_parser()
     print(args)

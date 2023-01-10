@@ -355,6 +355,37 @@ class TensorBase(torch.nn.Module):
         return alpha, dense_xyz
 
     @torch.no_grad()
+    def getGridColorAndDensity(self,gridSize=None):
+        gridSize = self.gridSize if gridSize is None else gridSize
+
+        samples = torch.stack(torch.meshgrid(
+            torch.linspace(0, 1, gridSize[0]),
+            torch.linspace(0, 1, gridSize[1]),
+            torch.linspace(0, 1, gridSize[2]),
+        ), -1).to(self.device)
+        dense_xyz = self.aabb[0] * (1-samples) + self.aabb[1] * samples
+
+        # dense_xyz = dense_xyz
+        # print(self.stepSize, self.distance_scale*self.aabbDiag)
+        alpha = torch.zeros_like(dense_xyz[...,0])
+        rgb = torch.zeros_like(dense_xyz)
+
+        #color is only for view direction along the z-axis
+        viewdirs = torch.zeros_like(dense_xyz)
+        viewdirs[...,0] = 1.0
+        for i in range(gridSize[0]):
+            print(f'Getting color for slice {i+1}/{gridSize[0]}', end='\r')
+            alpha[i] = self.compute_alpha(dense_xyz[i].view(-1,3), self.stepSize).view((gridSize[1], gridSize[2]))
+
+            for j in range(gridSize[1]):
+                app_features = self.compute_appfeature(dense_xyz[i,j])
+                tmp = self.renderModule(dense_xyz[i], viewdirs[i,j], app_features)
+                rgb[i,j] = tmp #self.renderModule(dense_xyz[i], viewdirs[i,j], app_features)
+
+        print(f'Finished getting colors for volume                 ')
+        return alpha, rgb, dense_xyz
+
+    @torch.no_grad()
     def updateAlphaMask(self, gridSize=(200,200,200)):
 
         alpha, dense_xyz = self.getDenseAlpha(gridSize)

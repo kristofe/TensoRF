@@ -8,8 +8,9 @@ n_iters = 10000
 batch_size = 4096
 
 N_voxel_init = 32768 # 32**3
-N_voxel_final = 262144 # 64**3 #!!!!!!!!!!!!!!!!!!!THIS IS USED TO SETUP GRID FOR RENDERING
+#N_voxel_final = 262144 # 64**3 #!!!!!!!!!!!!!!!!!!!THIS IS USED TO SETUP GRID FOR RENDERING
 #N_voxel_final = 884736 # 96**3
+N_voxel_final = 16777216 # 256**3
 upsamp_list = [1000,2000,3000]
 update_AlphaMask_list = [-1]  # disable recalculation of AABB[1000,3000] #see if this stops the grid from becoming non-cube
 
@@ -18,8 +19,8 @@ vis_every = 500
 
 render_test = 0
 
-n_lamb_sigma = [64] # This is the number of features per dimension per density plane/line
-n_lamb_sh = [128] #[1,1,1] #[48,48,48] # This is the number of features per dimension per appearance plane/line
+n_lamb_sigma = [256] # This is the number of features per dimension per density plane/line
+n_lamb_sh = [256] #[1,1,1] #[48,48,48] # This is the number of features per dimension per appearance plane/line
 model_name = TensorCP #TensorVMSplitNoMat # TensorVMSplit # TensorVMSplitCube 
 
 
