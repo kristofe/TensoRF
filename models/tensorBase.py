@@ -370,9 +370,9 @@ class TensorBase(torch.nn.Module):
         alpha = torch.zeros_like(dense_xyz[...,0])
         rgb = torch.zeros_like(dense_xyz)
 
-        #color is only for view direction along the z-axis
+        #color is only for view direction along the single axis
         viewdirs = torch.zeros_like(dense_xyz)
-        viewdirs[...,0] = 1.0
+        viewdirs[...,2] = -1.0
         for i in range(gridSize[0]):
             print(f'Getting color for slice {i+1}/{gridSize[0]}', end='\r')
             alpha[i] = self.compute_alpha(dense_xyz[i].view(-1,3), self.stepSize).view((gridSize[1], gridSize[2]))

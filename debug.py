@@ -16,9 +16,14 @@ if __name__ == '__main__':
     data = np.load('./test_ml_density_and_color.npz')
     color_data =  data['color']
     density_data =  data['density']
-    mask = density_data.copy()
 
-    threshold = 0.075
+    skip = 2
+    density_data = density_data[::skip,::skip,::skip]
+    color_data = color_data[::skip,::skip,::skip,:]
+
+
+    threshold = 0.01
+    mask = density_data.copy()
     mask[mask >= threshold] = 1
     mask[mask <  threshold] = 0
     sample_points = torch.stack(torch.meshgrid(
@@ -44,9 +49,13 @@ if __name__ == '__main__':
     zs = sample_points[:,2].cpu().numpy()
 
     color_data = torch.from_numpy(color_data)
+    density_data = torch.from_numpy(density_data)
     r = color_data.clamp(0.0,1.0).cpu().numpy()
-    sc = ax.scatter(xs,ys,zs,c=r, marker='.', cmap='Spectral')
-    plt.colorbar(sc)
+    d = density_data.clamp(0.0,1.0).cpu().numpy()
+    sc = ax.scatter(xs,ys,zs,c=r, marker='o')#cmap='Spectral')
+    # This has density as the alpha channel
+    #sc = ax.scatter(xs,ys,zs,c=r, marker='.', alpha=d, cmap='Spectral')
+    #plt.colorbar(sc)
     plt.show()
 
 
